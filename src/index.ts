@@ -1,0 +1,130 @@
+import uid from "./uid"
+
+export interface Fn2Step {
+  args: any[]
+  id: string
+  fns: Record<string, Function>
+  order: number
+}
+
+export class Fn2 {
+  steps: Fn2Step[] = []
+
+  add(...steps: Record<string, any>[]): void {
+    let args: any[]
+    let order: number
+
+    for (const item of steps) {
+      const step = this.prepareStep(args, order, item)
+      const { args: a, order: o } = step
+
+      args = typeof a === "undefined" ? args : a
+      order = typeof o === "undefined" ? order : o
+
+      if (step.fns) {
+        this.steps = this.steps.concat(step)
+      }
+    }
+  }
+
+  run(
+    id?: string,
+    output?: Record<string, any>
+  ): Record<string, any> | Promise<Record<string, any>> {
+    output = output || {}
+
+    let index: number
+
+    const steps = this.steps.sort(this.stepSort)
+
+    if (!id) {
+      id = steps[0].id
+      index = 0
+    } else {
+      index = steps.findIndex(step => step.id === id)
+    }
+
+    const step = steps[index]
+    const promises = []
+
+    for (const fnId in step.fns) {
+      const fn = step.fns[fnId]
+      const out = fn(...step.args)
+
+      if (out && out.then) {
+        promises.push(
+          out.then((o: any) => (output[fnId] = o))
+        )
+      } else {
+        output[fnId] = out
+      }
+    }
+
+    const nextStep = this.steps[index + 1]
+
+    if (!nextStep && promises.length) {
+      return Promise.all(promises).then(() => output)
+    }
+
+    if (!nextStep) {
+      return output
+    }
+
+    if (promises.length) {
+      return Promise.all(promises).then(() =>
+        this.run(nextStep.id, output)
+      )
+    }
+
+    return this.run(nextStep.id, output)
+  }
+
+  private prepareStep(
+    args: any[],
+    order: number,
+    item: Record<string, any>
+  ): Fn2Step {
+    let addedFn = false
+
+    const step: Fn2Step = {
+      args,
+      id: undefined,
+      fns: {},
+      order,
+    }
+
+    for (const key in item) {
+      if (key === "args") {
+        step.args = item.args
+      } else if (key === "order") {
+        step.order = item.order - 1
+      } else {
+        addedFn = true
+        step.fns[key] = item[key]
+        step.order = (step.order || 0) + 1
+      }
+    }
+
+    if (addedFn) {
+      step.id = uid()
+    } else {
+      step.fns = undefined
+    }
+
+    return step
+  }
+
+  private stepSort(
+    { order: a }: Fn2Step,
+    { order: b }: Fn2Step
+  ): number {
+    return a > b ? 1 : a < b ? -1 : 0
+  }
+}
+export default function fn2(
+  ...steps: Record<string, any>[]
+): Fn2 {
+  const instance = new Fn2()
+  instance.add(...steps)
+  return instance
+}
