@@ -5,9 +5,9 @@ export class Patch {
   patches: Record<string, Record<string, Fn2>> = {}
 
   add(
+    instance: any,
     instanceId: string,
     fnId: string,
-    instance: any,
     ...steps: Record<string, any>[]
   ): void {
     const p = this.patches[instanceId] || {}
@@ -20,12 +20,8 @@ export class Patch {
     ):
       | Record<string, any>
       | Promise<Record<string, any>> => {
-      const out = p[fnId].run({
-        args,
-        id: undefined,
-        fns: {},
-        order: undefined,
-      })
+      const out = p[fnId].run(args)
+
       if (out && out.then) {
         return out.then(
           (o: Record<string, any>): any => o[fnId]

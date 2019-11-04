@@ -32,16 +32,14 @@ export default class Fn2 {
   }
 
   run(
-    initStep?: Fn2Step,
+    args?: any[],
     id?: string,
     output?: Record<string, any>
   ): Record<string, any> | Promise<Record<string, any>> {
     output = output || {}
 
     let index: number
-    let steps = this.steps.sort(this.stepSort)
-
-    steps = initStep ? [initStep, ...steps] : steps
+    const steps = this.steps.sort(this.stepSort)
 
     if (!id) {
       index = 0
@@ -54,7 +52,7 @@ export default class Fn2 {
 
     for (const fnId in step.fns) {
       const fn = step.fns[fnId]
-      const out = fn(...step.args)
+      const out = fn(...(args || step.args))
 
       if (out && out.then) {
         promises.push(
@@ -77,11 +75,11 @@ export default class Fn2 {
 
     if (promises.length) {
       return Promise.all(promises).then(() =>
-        this.run(initStep, nextStep.id, output)
+        this.run(args, nextStep.id, output)
       )
     }
 
-    return this.run(initStep, nextStep.id, output)
+    return this.run(args, nextStep.id, output)
   }
 
   private prepareStep(
