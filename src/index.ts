@@ -4,6 +4,7 @@ export interface Fn2Step {
   args: any[]
   id: string
   fns: Record<string, Function>
+  peek: boolean
   order: number
 }
 
@@ -52,7 +53,10 @@ export default class Fn2 {
 
     for (const fnId in step.fns) {
       const fn = step.fns[fnId]
-      const out = fn(...(args || step.args))
+      const out = fn(
+        ...(step.peek ? [output] : []),
+        ...(args || step.args)
+      )
 
       if (out && out.then) {
         promises.push(
@@ -94,6 +98,7 @@ export default class Fn2 {
       id: undefined,
       fns: {},
       order,
+      peek: undefined,
     }
 
     for (const key in item) {
@@ -101,6 +106,8 @@ export default class Fn2 {
         step.args = item.args
       } else if (key === "order") {
         step.order = item.order - 1
+      } else if (key === "peek") {
+        step.peek = item.peek
       } else {
         addedFn = true
         step.fns[key] = item[key]

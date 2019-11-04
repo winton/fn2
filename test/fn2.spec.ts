@@ -73,3 +73,32 @@ it("run (async)", async () => {
   expect(calls).toEqual([3, 4, 1, 2])
   expect(out).toEqual({ f1: 1, f2: 2, f3: 3, f4: 4 })
 })
+
+it("run args", () => {
+  const calls = []
+  const group = fixture(
+    (...args) => args,
+    (...args) => args,
+    (...args) => args,
+    (...args) => args
+  )
+  const out = group.run()
+  expect(out).toEqual({
+    f1: ["test"],
+    f2: ["test"],
+    f3: [],
+    f4: [],
+  })
+})
+
+it("run args (with peek)", () => {
+  const group = new Fn2(
+    { args: ["test"], order: 1 },
+    { f1: (...args): any[] => args, peek: true },
+    { f2: (...args): any[] => args }
+  )
+  const out = group.run() as Record<string, any>
+  expect(out.f1[0]).toBe(out)
+  expect(out.f1[1]).toBe("test")
+  expect(out.f2).toEqual(["test"])
+})
