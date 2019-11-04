@@ -10,25 +10,49 @@ export class Patch {
     fnId: string,
     ...steps: Record<string, any>[]
   ): void {
-    const p = this.patches[instanceId] || {}
-    this.patches[instanceId] = p
+    const patches = this.patches[instanceId] || {}
+    this.patches[instanceId] = patches
 
-    p[fnId] = new this.Fn2(...steps)
+    if (patches[fnId]) {
+      patches[fnId].add(...steps)
+    } else {
+      patches[fnId] = new this.Fn2(...steps)
 
-    instance[fnId] = (
-      ...args: any[]
-    ):
-      | Record<string, any>
-      | Promise<Record<string, any>> => {
-      const out = p[fnId].run(args)
-
-      if (out && out.then) {
-        return out.then(
-          (o: Record<string, any>): any => o[fnId]
+      instance[fnId] = (
+        ...args: any[]
+      ):
+        | Record<string, any>
+        | Promise<Record<string, any>> => {
+        const outId = this.extractReturnOption(
+          patches[fnId].steps
         )
-      } else if (out) {
-        return out[fnId]
+
+        const out = patches[fnId].run(args)
+
+        if (out && out.then) {
+          return out.then(
+            (o: Record<string, any>): any =>
+              o[outId || fnId]
+          )
+        } else if (out) {
+          return out[outId || fnId]
+        }
       }
+    }
+  }
+
+  reset(): void {
+    this.patches = {}
+  }
+
+  private extractReturnOption(
+    steps: Record<string, any>[]
+  ): string {
+    const step = steps
+      .reverse()
+      .find((step: Record<string, any>) => step.return)
+    if (step) {
+      return step.return
     }
   }
 }

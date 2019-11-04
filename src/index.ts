@@ -6,6 +6,7 @@ export interface Fn2Step {
   fns: Record<string, Function>
   peek: boolean
   order: number
+  return: string
 }
 
 export default class Fn2 {
@@ -99,6 +100,7 @@ export default class Fn2 {
       fns: {},
       order,
       peek: undefined,
+      return: undefined,
     }
 
     for (const key in item) {
@@ -108,6 +110,8 @@ export default class Fn2 {
         step.order = item.order - 1
       } else if (key === "peek") {
         step.peek = item.peek
+      } else if (key === "return") {
+        step.return = item.return
       } else {
         addedFn = true
         step.fns[key] = item[key]
