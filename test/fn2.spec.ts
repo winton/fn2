@@ -91,14 +91,32 @@ it("run args", () => {
   })
 })
 
-it("run args (with peek)", () => {
+it("run args (with prependArg)", () => {
   const group = new Fn2(
     { args: ["test"], order: 1 },
-    { f1: (...args): any[] => args, peek: true },
+    {
+      f1: (...args): any[] => args,
+      prependArg: { prepended: true },
+    },
     { f2: (...args): any[] => args }
   )
   const out = group.run() as Record<string, any>
-  expect(out.f1[0]).toBe(out)
+  expect(out.f1[0]).toEqual({ prepended: true })
+  expect(out.f1[1]).toBe("test")
+  expect(out.f2).toEqual(["test"])
+})
+
+it("run args (with prependOutputArg)", () => {
+  const group = new Fn2(
+    { args: ["test"], order: 1 },
+    {
+      f1: (...args): any[] => args,
+      prependOutputArg: true,
+    },
+    { f2: (...args): any[] => args }
+  )
+  const out = group.run() as Record<string, any>
+  expect(out.f1[0]).toEqual(out)
   expect(out.f1[1]).toBe("test")
   expect(out.f2).toEqual(["test"])
 })

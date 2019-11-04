@@ -4,7 +4,8 @@ export interface Fn2Step {
   args: any[]
   id: string
   fns: Record<string, Function>
-  peek: boolean
+  prependArg: any
+  prependOutputArg: true
   order: number
   return: string
 }
@@ -55,7 +56,8 @@ export default class Fn2 {
     for (const fnId in step.fns) {
       const fn = step.fns[fnId]
       const out = fn(
-        ...(step.peek ? [output] : []),
+        ...(step.prependArg ? [step.prependArg] : []),
+        ...(step.prependOutputArg ? [output] : []),
         ...(args || step.args)
       )
 
@@ -99,19 +101,23 @@ export default class Fn2 {
       id: undefined,
       fns: {},
       order,
-      peek: undefined,
+      prependArg: undefined,
+      prependOutputArg: undefined,
       return: undefined,
     }
 
+    const copyKeys = [
+      "args",
+      "prependArg",
+      "prependOutputArg",
+      "return",
+    ]
+
     for (const key in item) {
-      if (key === "args") {
-        step.args = item.args
+      if (copyKeys.indexOf(key) > -1) {
+        step[key] = item[key]
       } else if (key === "order") {
         step.order = item.order - 1
-      } else if (key === "peek") {
-        step.peek = item.peek
-      } else if (key === "return") {
-        step.return = item.return
       } else {
         addedFn = true
         step.fns[key] = item[key]
