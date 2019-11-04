@@ -1,5 +1,5 @@
 import expect from "./expect"
-import fn2, { Fn2 } from "../src"
+import Fn2 from "../src"
 
 const emptyFn = (): void => {}
 
@@ -9,7 +9,7 @@ const fixture = (
   f3?: Function,
   f4?: Function
 ): Fn2 =>
-  fn2(
+  new Fn2(
     { args: ["test"], order: 1 },
     { f1: f1 || emptyFn },
     { f2: f2 || emptyFn },

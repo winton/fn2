@@ -7,8 +7,12 @@ export interface Fn2Step {
   order: number
 }
 
-export class Fn2 {
+export default class Fn2 {
   steps: Fn2Step[] = []
+
+  constructor(...steps: Record<string, any>[]) {
+    this.add(...steps)
+  }
 
   add(...steps: Record<string, any>[]): void {
     let args: any[]
@@ -28,17 +32,18 @@ export class Fn2 {
   }
 
   run(
+    initStep?: Fn2Step,
     id?: string,
     output?: Record<string, any>
   ): Record<string, any> | Promise<Record<string, any>> {
     output = output || {}
 
     let index: number
+    let steps = this.steps.sort(this.stepSort)
 
-    const steps = this.steps.sort(this.stepSort)
+    steps = initStep ? [initStep, ...steps] : steps
 
     if (!id) {
-      id = steps[0].id
       index = 0
     } else {
       index = steps.findIndex(step => step.id === id)
@@ -60,7 +65,7 @@ export class Fn2 {
       }
     }
 
-    const nextStep = this.steps[index + 1]
+    const nextStep = steps[index + 1]
 
     if (!nextStep && promises.length) {
       return Promise.all(promises).then(() => output)
@@ -72,11 +77,11 @@ export class Fn2 {
 
     if (promises.length) {
       return Promise.all(promises).then(() =>
-        this.run(nextStep.id, output)
+        this.run(initStep, nextStep.id, output)
       )
     }
 
-    return this.run(nextStep.id, output)
+    return this.run(initStep, nextStep.id, output)
   }
 
   private prepareStep(
@@ -120,11 +125,4 @@ export class Fn2 {
   ): number {
     return a > b ? 1 : a < b ? -1 : 0
   }
-}
-export default function fn2(
-  ...steps: Record<string, any>[]
-): Fn2 {
-  const instance = new Fn2()
-  instance.add(...steps)
-  return instance
 }
