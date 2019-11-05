@@ -58,7 +58,7 @@ export default class Fn2 {
       const out = fn(
         ...(step.prependArg ? [step.prependArg] : []),
         ...(step.prependOutputArg ? [output] : []),
-        ...(args || step.args)
+        ...(step.args || args)
       )
 
       if (out && out.then) {
