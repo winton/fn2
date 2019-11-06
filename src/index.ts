@@ -39,7 +39,7 @@ export default class Fn2 {
   }
 
   run(
-    args?: any[],
+    args: any[] = [],
     id?: string,
     output?: Record<string, any>
   ): Fn2Out {
