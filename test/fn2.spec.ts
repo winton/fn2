@@ -74,6 +74,11 @@ it("run (async)", async () => {
   expect(out).toEqual({ f1: 1, f2: 2, f3: 3, f4: 4 })
 })
 
+it("run (empty step)", () => {
+  const out = new Fn2({}).run()
+  expect(out).toEqual({})
+})
+
 it("run args", () => {
   const calls = []
   const group = fixture(

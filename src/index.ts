@@ -57,6 +57,10 @@ export default class Fn2 {
     const step = steps[index]
     const promises = []
 
+    if (!step) {
+      return output
+    }
+
     for (const fnId in step.fns) {
       const fn = step.fns[fnId]
       const out = fn(
