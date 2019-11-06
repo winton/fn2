@@ -10,6 +10,10 @@ export interface Fn2Step {
   return: string
 }
 
+export type Fn2Out =
+  | Record<string, any>
+  | Promise<Record<string, any>>
+
 export default class Fn2 {
   steps: Fn2Step[] = []
 
@@ -38,7 +42,7 @@ export default class Fn2 {
     args?: any[],
     id?: string,
     output?: Record<string, any>
-  ): Record<string, any> | Promise<Record<string, any>> {
+  ): Fn2Out {
     output = output || {}
 
     let index: number
