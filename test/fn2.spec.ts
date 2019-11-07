@@ -1,127 +1,85 @@
 import expect from "./expect"
-import Fn2 from "../src"
+import fn2 from "../src"
 
-const emptyFn = (): void => {}
-
-const fixture = (
-  f1?: Function,
-  f2?: Function,
-  f3?: Function,
-  f4?: Function
-): Fn2 =>
-  new Fn2(
-    { args: ["test"], order: 1 },
-    { f1: f1 || emptyFn },
-    { f2: f2 || emptyFn },
-    { args: [], order: -5 },
-    { f3: f3 || emptyFn },
-    { f4: f4 || emptyFn }
-  )
-
-it("add", () => {
-  const group = fixture()
-  expect(group.steps).toEqual([
-    {
-      args: ["test"],
-      fns: { f1: expect.any(Function) },
-      id: expect.any(String),
-      order: 1,
-    },
-    {
-      args: ["test"],
-      fns: { f2: expect.any(Function) },
-      id: expect.any(String),
-      order: 2,
-    },
-    {
-      args: [],
-      fns: { f3: expect.any(Function) },
-      id: expect.any(String),
-      order: -5,
-    },
-    {
-      args: [],
-      fns: { f4: expect.any(Function) },
-      id: expect.any(String),
-      order: -4,
-    },
-  ])
-})
-
-it("run (sync)", () => {
-  const calls = []
-  const group = fixture(
-    () => calls.push(1) && 1,
-    () => calls.push(2) && 2,
-    () => calls.push(3) && 3,
-    () => calls.push(4) && 4
-  )
-  const out = group.run()
-  expect(calls).toEqual([3, 4, 1, 2])
-  expect(out).toEqual({ f1: 1, f2: 2, f3: 3, f4: 4 })
-})
-
-it("run (async)", async () => {
-  const calls = []
-  const group = fixture(
-    async () => calls.push(1) && 1,
-    async () => calls.push(2) && 2,
-    async () => calls.push(3) && 3,
-    async () => calls.push(4) && 4
-  )
-  const out = await group.run()
-  expect(calls).toEqual([3, 4, 1, 2])
-  expect(out).toEqual({ f1: 1, f2: 2, f3: 3, f4: 4 })
-})
-
-it("run (empty step)", () => {
-  const out = new Fn2({}).run()
-  expect(out).toEqual({})
-})
-
-it("run args", () => {
-  const calls = []
-  const group = fixture(
-    (...args) => args,
-    (...args) => args,
-    (...args) => args,
-    (...args) => args
-  )
-  const out = group.run()
-  expect(out).toEqual({
-    f1: ["test"],
-    f2: ["test"],
-    f3: [],
-    f4: [],
+describe("fn2", () => {
+  it("output", () => {
+    expect(
+      fn2({ hi: () => true }, { world: () => false })
+    ).toEqual({ hi: true, world: false })
   })
-})
 
-it("run args (with prependArg)", () => {
-  const group = new Fn2(
-    { args: ["test"], order: 1 },
-    {
-      f1: (...args): any[] => args,
-      prependArg: { prepended: true },
-    },
-    { f2: (...args): any[] => args }
-  )
-  const out = group.run() as Record<string, any>
-  expect(out.f1[0]).toEqual({ prepended: true })
-  expect(out.f1[1]).toBe("test")
-  expect(out.f2).toEqual(["test"])
-})
+  it("output async", async () => {
+    expect(
+      await fn2(
+        { hi: async () => true },
+        { world: async () => false }
+      )
+    ).toEqual({
+      hi: true,
+      world: false,
+    })
+  })
 
-it("run args (with prependOutputArg)", () => {
-  const group = new Fn2(
-    { args: ["test"], order: 1 },
-    {
-      f1: (...args): any[] => args,
-      prependOutputArg: true,
-    },
-    { f2: (...args): any[] => args }
-  )
-  const out = group.run() as Record<string, any>
-  expect(out.f1[0]).toEqual(out)
-  expect(out.f1[1]).toBe("test")
-  expect(out.f2).toEqual(["test"])
+  it("order", () => {
+    const calls = []
+    fn2(
+      { hi: () => calls.push("hi") },
+      { world: () => calls.push("world") }
+    )
+    expect(calls).toEqual(["hi", "world"])
+  })
+
+  it("order async", async () => {
+    const calls = []
+    await fn2(
+      { hi: async () => calls.push("hi") },
+      { world: async () => calls.push("world") }
+    )
+    expect(calls).toEqual(["hi", "world"])
+  })
+
+  it("nest", () => {
+    expect(
+      fn2({
+        hi: () => {
+          return fn2({ test: () => "test" })
+        },
+      })
+    ).toEqual({ hi: { test: "test" } })
+  })
+
+  it("nest async", async () => {
+    expect(
+      await fn2({
+        hi: () => {
+          return fn2({ test: async () => "test" })
+        },
+      })
+    ).toEqual({ hi: { test: "test" } })
+  })
+
+  it("memo", () => {
+    const memo = {}
+    fn2(memo, [], { hi: () => true })
+    expect(memo).toEqual({ hi: true })
+  })
+
+  it("memo async", async () => {
+    const memo = {}
+    await fn2(memo, [], { hi: async () => true })
+    expect(memo).toEqual({ hi: true })
+  })
+
+  it("args", () => {
+    fn2(["hi"], {
+      hi: (x: string) => expect(x).toBe("hi"),
+    })
+  })
+
+  it("args async", async () => {
+    expect.assertions(1)
+    await fn2(["hi"], {
+      hi: async (x: string) => expect(x).toBe("hi"),
+    })
+  })
 })
