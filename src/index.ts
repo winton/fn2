@@ -34,6 +34,11 @@ function eachStep(
 
   for (const fnId in step) {
     const fn = step[fnId]
+
+    if (typeof fn !== "function") {
+      return
+    }
+
     const out = fn(...args)
 
     if (out && out.then) {
