@@ -36,7 +36,7 @@ function eachStep(
     const fn = step[fnId]
 
     if (typeof fn !== "function") {
-      return
+      continue
     }
 
     const out = fn(...args)
