@@ -1,19 +1,19 @@
 function fixArgs(
-  memo: Record<string, any>,
+  memoOrStep: Record<string, any>,
   argsOrStep: any[] | Record<string, any>[],
   steps: Record<string, any>[]
 ): [Record<string, any>, any[], Record<string, any>[]] {
   let args = []
+  let memo = {}
 
-  if (Array.isArray(memo)) {
-    args = memo
+  if (Array.isArray(memoOrStep)) {
+    args = memoOrStep
     steps = [argsOrStep].concat(steps)
-    memo = {}
   } else if (Array.isArray(argsOrStep)) {
     args = argsOrStep
+    memo = memoOrStep
   } else {
-    steps = [memo, argsOrStep].concat(steps)
-    memo = {}
+    steps = [memoOrStep, argsOrStep].concat(steps)
   }
 
   return [memo, args, steps]
@@ -76,11 +76,11 @@ function fn2(
 function fn2(...steps: Record<string, any>[]): fn2Out
 
 function fn2(
-  memo?: Record<string, any>,
+  memoOrStep?: Record<string, any>,
   argsOrStep?: any[] | Record<string, any>[],
   ...steps: Record<string, any>[]
 ): fn2Out {
-  return eachStep(...fixArgs(memo, argsOrStep, steps))
+  return eachStep(...fixArgs(memoOrStep, argsOrStep, steps))
 }
 
 export type fn2Out =
