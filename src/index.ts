@@ -66,24 +66,24 @@ function fn2(
   memo: Record<string, any>,
   args: any[],
   ...steps: Record<string, any>[]
-): fn2Out
+): fn2out
 
 function fn2(
   args: any[],
   ...steps: Record<string, any>[]
-): fn2Out
+): fn2out
 
-function fn2(...steps: Record<string, any>[]): fn2Out
+function fn2(...steps: Record<string, any>[]): fn2out
 
 function fn2(
   memoOrStep?: Record<string, any>,
   argsOrStep?: any[] | Record<string, any>[],
   ...steps: Record<string, any>[]
-): fn2Out {
+): fn2out {
   return eachStep(...fixArgs(memoOrStep, argsOrStep, steps))
 }
 
-export type fn2Out =
+export type fn2out =
   | Record<string, any>
   | Promise<Record<string, any>>
 
