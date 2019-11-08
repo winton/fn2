@@ -82,4 +82,36 @@ describe("fn2", () => {
       hi: async (x: string) => expect(x).toBe("hi"),
     })
   })
+
+  it("step args", () => {
+    fn2({
+      args: ["hi"],
+      hi: (x: string) => expect(x).toBe("hi"),
+    })
+  })
+
+  it("step args async", async () => {
+    expect.assertions(1)
+    await fn2({
+      args: ["hi"],
+      hi: async (x: string) => expect(x).toBe("hi"),
+    })
+  })
+
+  it("both args", () => {
+    fn2([" world"], {
+      args: ["hi"],
+      hi: (x: string, y: string) =>
+        expect(x + y).toBe("hi world"),
+    })
+  })
+
+  it("step args async", async () => {
+    expect.assertions(1)
+    await fn2([" world"], {
+      args: ["hi"],
+      hi: async (x: string, y: string) =>
+        expect(x + y).toBe("hi world"),
+    })
+  })
 })

@@ -39,7 +39,8 @@ function eachStep(
       continue
     }
 
-    const out = fn(...args)
+    const preArgs = step.args || []
+    const out = fn(...preArgs, ...args)
 
     if (out && out.then) {
       promises.push(out.then((o: any) => (memo[fnId] = o)))
