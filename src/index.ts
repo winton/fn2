@@ -16,6 +16,8 @@ function fixArgs(
     steps = [memoOrStep, argsOrStep].concat(steps)
   }
 
+  steps = steps.filter(step => step)
+
   return [memo, args, steps]
 }
 
@@ -23,6 +25,7 @@ function eachStep(
   memo: Record<string, any>,
   args: any[],
   steps: Record<string, any>[],
+  trace: string,
   index = 0
 ): Record<string, any> {
   const promises = []
@@ -63,11 +66,30 @@ function eachStep(
 
   if (promises.length) {
     return Promise.all(promises).then(() =>
-      eachStep(memo, args, steps, index + 1)
+      eachStep(memo, args, steps, trace, index + 1)
     )
   }
 
-  return eachStep(memo, args, steps, index + 1)
+  return eachStep(memo, args, steps, trace, index + 1)
+}
+
+function logStart(trace: string, time: number): void {
+  // eslint-disable-next-line
+  console.log("🐤 Starting " + trace)
+}
+
+function logFinish(trace: string, time: number): void {
+  const now = new Date().getTime()
+  // eslint-disable-next-line
+  console.log("🦆 Finished " + trace + ` in ${now - time} ms`)
+}
+
+function stackTrace(): string {
+  const err = new Error()
+  return err.stack
+    .match(/^\s+at\s.+$/gm)[2]
+    .replace(process.cwd() + "/", "")
+    .replace(/^\s+/, "")
 }
 
 function fn2(
@@ -86,9 +108,32 @@ function fn2(...steps: Record<string, any>[]): fn2out
 function fn2(
   memoOrStep?: Record<string, any>,
   argsOrStep?: any[] | Record<string, any>[],
-  ...steps: Record<string, any>[]
+  ...stepsOrEmpty: Record<string, any>[]
 ): fn2out {
-  return eachStep(...fixArgs(memoOrStep, argsOrStep, steps))
+  const [memo, args, steps] = fixArgs(
+    memoOrStep,
+    argsOrStep,
+    stepsOrEmpty
+  )
+
+  let trace: string
+
+  if (typeof process !== "undefined" && process.env.LOG) {
+    const time = new Date().getTime()
+    trace = stackTrace()
+
+    steps.unshift({
+      args: [trace, time],
+      logStart,
+    })
+
+    steps.push({
+      args: [trace, time],
+      logFinish,
+    })
+  }
+
+  return eachStep(memo, args, steps, trace)
 }
 
 export type fn2out =
