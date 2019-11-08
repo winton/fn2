@@ -86,10 +86,15 @@ function logFinish(trace: string, time: number): void {
 
 function stackTrace(): string {
   const err = new Error()
-  return err.stack
+  const stack = err.stack
     .match(/^\s+at\s.+$/gm)[2]
-    .replace(process.cwd() + "/", "")
     .replace(/^\s+/, "")
+
+  if (typeof process !== "undefined") {
+    return stack.replace(process.cwd() + "/", "")
+  }
+
+  return stack
 }
 
 function fn2(
