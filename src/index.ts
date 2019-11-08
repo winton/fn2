@@ -39,7 +39,9 @@ function eachStep(
       continue
     }
 
-    const preArgs = step.args || []
+    const preArgs =
+      step.args && Array.isArray(step.args) ? step.args : []
+
     const out = fn(...preArgs, ...args)
 
     if (out && out.then) {
