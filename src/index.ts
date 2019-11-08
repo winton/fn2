@@ -1,3 +1,5 @@
+let counter = 0
+
 function fixArgs(
   memoOrStep: Record<string, any>,
   argsOrStep: any[] | Record<string, any>[],
@@ -73,15 +75,23 @@ function eachStep(
   return eachStep(memo, args, steps, trace, index + 1)
 }
 
-function logStart(trace: string, time: number): void {
+function logStart(
+  count: number,
+  trace: string,
+  time: number
+): void {
   // eslint-disable-next-line
-  console.log("🐤 Starting " + trace)
+  console.log(`🐤 Starting ${count} ${trace}`)
 }
 
-function logFinish(trace: string, time: number): void {
+function logFinish(
+  count: number,
+  trace: string,
+  time: number
+): void {
   const now = new Date().getTime()
   // eslint-disable-next-line
-  console.log("🦆 Finished " + trace + ` in ${now - time} ms`)
+  console.log(`🦆 Finished ${count} ${trace} in ${now - time} ms`)
 }
 
 function stackTrace(): string {
@@ -124,16 +134,17 @@ function fn2(
   let trace: string
 
   if (typeof process !== "undefined" && process.env.LOG) {
+    const count = (counter += 1)
     const time = new Date().getTime()
     trace = stackTrace()
 
     steps.unshift({
-      args: [trace, time],
+      args: [count, trace, time],
       logStart,
     })
 
     steps.push({
-      args: [trace, time],
+      args: [count, trace, time],
       logFinish,
     })
   }
