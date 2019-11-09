@@ -43,6 +43,9 @@ export class Fn2 {
         continue
       }
 
+      const returnArgs =
+        step.returnArgs && step.returnArgs === fnId
+
       const preArgs =
         step.args && Array.isArray(step.args)
           ? step.args
@@ -52,10 +55,18 @@ export class Fn2 {
 
       if (out && out.then) {
         promises.push(
-          out.then((o: any) => (memo[fnId] = o))
+          out.then((o: any) => {
+            memo[fnId] = o
+            if (returnArgs) {
+              args = o
+            }
+          })
         )
       } else {
         memo[fnId] = out
+        if (returnArgs) {
+          args = out
+        }
       }
     }
 

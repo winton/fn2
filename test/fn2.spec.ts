@@ -71,6 +71,7 @@ describe("fn2", () => {
   })
 
   it("args", () => {
+    expect.assertions(1)
     fn2.run(["hi"], {
       hi: (x: string) => expect(x).toBe("hi"),
     })
@@ -84,6 +85,7 @@ describe("fn2", () => {
   })
 
   it("step args", () => {
+    expect.assertions(1)
     fn2.run({
       args: ["hi"],
       hi: (x: string) => expect(x).toBe("hi"),
@@ -99,6 +101,7 @@ describe("fn2", () => {
   })
 
   it("both args", () => {
+    expect.assertions(1)
     fn2.run([" world"], {
       args: ["hi"],
       hi: (x: string, y: string) =>
@@ -106,12 +109,50 @@ describe("fn2", () => {
     })
   })
 
-  it("step args async", async () => {
+  it("both args async", async () => {
     expect.assertions(1)
     await fn2.run([" world"], {
       args: ["hi"],
       hi: async (x: string, y: string) =>
         expect(x + y).toBe("hi world"),
     })
+  })
+
+  it("return args", () => {
+    expect.assertions(2)
+    fn2.run(
+      ["hello"],
+      {
+        returnArgs: "hi",
+        hi: (x: string) => {
+          expect(x).toBe("hello")
+          return ["hi"]
+        },
+      },
+      {
+        world: (x: string) => {
+          expect(x).toBe("hi")
+        },
+      }
+    )
+  })
+
+  it("return args async", async () => {
+    expect.assertions(2)
+    await fn2.run(
+      ["hello"],
+      {
+        returnArgs: "hi",
+        hi: async (x: string, y: string) => {
+          expect(x).toBe("hello")
+          return ["hi"]
+        },
+      },
+      {
+        world: async (x: string) => {
+          expect(x).toBe("hi")
+        },
+      }
+    )
   })
 })
