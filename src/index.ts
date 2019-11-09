@@ -1,159 +1,109 @@
-let counter = 0
+export class Fn2 {
+  run(
+    memo: Record<string, any>,
+    args: any[],
+    ...steps: Record<string, any>[]
+  ): fn2out
 
-function fixArgs(
-  memoOrStep: Record<string, any>,
-  argsOrStep: any[] | Record<string, any>[],
-  steps: Record<string, any>[]
-): [Record<string, any>, any[], Record<string, any>[]] {
-  let args = []
-  let memo = {}
+  run(args: any[], ...steps: Record<string, any>[]): fn2out
 
-  if (Array.isArray(memoOrStep)) {
-    args = memoOrStep
-    steps = [argsOrStep].concat(steps)
-  } else if (Array.isArray(argsOrStep)) {
-    args = argsOrStep
-    memo = memoOrStep
-  } else {
-    steps = [memoOrStep, argsOrStep].concat(steps)
-  }
+  run(...steps: Record<string, any>[]): fn2out
 
-  steps = steps.filter(step => step)
-
-  return [memo, args, steps]
-}
-
-function eachStep(
-  memo: Record<string, any>,
-  args: any[],
-  steps: Record<string, any>[],
-  trace: string,
-  index = 0
-): Record<string, any> {
-  const promises = []
-  const step = steps[index]
-
-  if (!step) {
-    return memo
-  }
-
-  for (const fnId in step) {
-    const fn = step[fnId]
-
-    if (typeof fn !== "function") {
-      continue
-    }
-
-    const preArgs =
-      step.args && Array.isArray(step.args) ? step.args : []
-
-    const out = fn(...preArgs, ...args)
-
-    if (out && out.then) {
-      promises.push(out.then((o: any) => (memo[fnId] = o)))
-    } else {
-      memo[fnId] = out
-    }
-  }
-
-  const nextStep = steps[index + 1]
-
-  if (!nextStep && promises.length) {
-    return Promise.all(promises).then(() => memo)
-  }
-
-  if (!nextStep) {
-    return memo
-  }
-
-  if (promises.length) {
-    return Promise.all(promises).then(() =>
-      eachStep(memo, args, steps, trace, index + 1)
+  run(
+    memoOrStep?: Record<string, any>,
+    argsOrStep?: any[] | Record<string, any>[],
+    ...stepsOrEmpty: Record<string, any>[]
+  ): fn2out {
+    return this.eachStep(
+      ...this.prepareArgs(
+        memoOrStep,
+        argsOrStep,
+        stepsOrEmpty
+      )
     )
   }
 
-  return eachStep(memo, args, steps, trace, index + 1)
-}
+  eachStep(
+    memo: Record<string, any>,
+    args: any[],
+    steps: Record<string, any>[],
+    index = 0
+  ): Record<string, any> {
+    const promises = []
+    const step = steps[index]
 
-function logStart(
-  count: number,
-  trace: string,
-  time: number
-): void {
-  // eslint-disable-next-line
-  console.log(`🐤 Starting ${count} ${trace}`)
-}
+    if (!step) {
+      return memo
+    }
 
-function logFinish(
-  count: number,
-  trace: string,
-  time: number
-): void {
-  const now = new Date().getTime()
-  // eslint-disable-next-line
-  console.log(`🦆 Finished ${count} ${trace} in ${now - time} ms`)
-}
+    for (const fnId in step) {
+      const fn = step[fnId]
 
-function stackTrace(): string {
-  const err = new Error()
-  const stack = err.stack
-    .match(/^\s+at\s.+$/gm)[2]
-    .replace(/^\s+/, "")
+      if (typeof fn !== "function") {
+        continue
+      }
 
-  if (typeof process !== "undefined") {
-    return stack.replace(process.cwd() + "/", "")
+      const preArgs =
+        step.args && Array.isArray(step.args)
+          ? step.args
+          : []
+
+      const out = fn(...preArgs, ...args)
+
+      if (out && out.then) {
+        promises.push(
+          out.then((o: any) => (memo[fnId] = o))
+        )
+      } else {
+        memo[fnId] = out
+      }
+    }
+
+    const nextStep = steps[index + 1]
+
+    if (!nextStep && promises.length) {
+      return Promise.all(promises).then(() => memo)
+    }
+
+    if (!nextStep) {
+      return memo
+    }
+
+    if (promises.length) {
+      return Promise.all(promises).then(() =>
+        this.eachStep(memo, args, steps, index + 1)
+      )
+    }
+
+    return this.eachStep(memo, args, steps, index + 1)
   }
 
-  return stack
-}
+  prepareArgs(
+    memoOrStep: Record<string, any>,
+    argsOrStep: any[] | Record<string, any>[],
+    steps: Record<string, any>[]
+  ): [Record<string, any>, any[], Record<string, any>[]] {
+    let args = []
+    let memo = {}
 
-function fn2(
-  memo: Record<string, any>,
-  args: any[],
-  ...steps: Record<string, any>[]
-): fn2out
+    if (Array.isArray(memoOrStep)) {
+      args = memoOrStep
+      steps = [argsOrStep].concat(steps)
+    } else if (Array.isArray(argsOrStep)) {
+      args = argsOrStep
+      memo = memoOrStep
+    } else {
+      steps = [memoOrStep, argsOrStep].concat(steps)
+    }
 
-function fn2(
-  args: any[],
-  ...steps: Record<string, any>[]
-): fn2out
+    steps = steps.filter(step => step)
 
-function fn2(...steps: Record<string, any>[]): fn2out
-
-function fn2(
-  memoOrStep?: Record<string, any>,
-  argsOrStep?: any[] | Record<string, any>[],
-  ...stepsOrEmpty: Record<string, any>[]
-): fn2out {
-  const [memo, args, steps] = fixArgs(
-    memoOrStep,
-    argsOrStep,
-    stepsOrEmpty
-  )
-
-  let trace: string
-
-  if (typeof process !== "undefined" && process.env.LOG) {
-    const count = (counter += 1)
-    const time = new Date().getTime()
-    trace = stackTrace()
-
-    steps.unshift({
-      args: [count, trace, time],
-      logStart,
-    })
-
-    steps.push({
-      args: [count, trace, time],
-      logFinish,
-    })
+    return [memo, args, steps]
   }
-
-  return eachStep(memo, args, steps, trace)
 }
 
 export type fn2out =
   | Record<string, any>
   | Promise<Record<string, any>>
 
-export default fn2
+export default new Fn2()

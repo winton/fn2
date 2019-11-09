@@ -4,13 +4,13 @@ import fn2 from "../src"
 describe("fn2", () => {
   it("output", () => {
     expect(
-      fn2({ hi: () => true }, { world: () => false })
+      fn2.run({ hi: () => true }, { world: () => false })
     ).toEqual({ hi: true, world: false })
   })
 
   it("output async", async () => {
     expect(
-      await fn2(
+      await fn2.run(
         { hi: async () => true },
         { world: async () => false }
       )
@@ -22,7 +22,7 @@ describe("fn2", () => {
 
   it("order", () => {
     const calls = []
-    fn2(
+    fn2.run(
       { hi: () => calls.push("hi") },
       { world: () => calls.push("world") }
     )
@@ -31,7 +31,7 @@ describe("fn2", () => {
 
   it("order async", async () => {
     const calls = []
-    await fn2(
+    await fn2.run(
       { hi: async () => calls.push("hi") },
       { world: async () => calls.push("world") }
     )
@@ -40,9 +40,9 @@ describe("fn2", () => {
 
   it("nest", () => {
     expect(
-      fn2({
+      fn2.run({
         hi: () => {
-          return fn2({ test: () => "test" })
+          return fn2.run({ test: () => "test" })
         },
       })
     ).toEqual({ hi: { test: "test" } })
@@ -50,9 +50,9 @@ describe("fn2", () => {
 
   it("nest async", async () => {
     expect(
-      await fn2({
+      await fn2.run({
         hi: () => {
-          return fn2({ test: async () => "test" })
+          return fn2.run({ test: async () => "test" })
         },
       })
     ).toEqual({ hi: { test: "test" } })
@@ -60,31 +60,31 @@ describe("fn2", () => {
 
   it("memo", () => {
     const memo = {}
-    fn2(memo, [], { hi: () => true })
+    fn2.run(memo, [], { hi: () => true })
     expect(memo).toEqual({ hi: true })
   })
 
   it("memo async", async () => {
     const memo = {}
-    await fn2(memo, [], { hi: async () => true })
+    await fn2.run(memo, [], { hi: async () => true })
     expect(memo).toEqual({ hi: true })
   })
 
   it("args", () => {
-    fn2(["hi"], {
+    fn2.run(["hi"], {
       hi: (x: string) => expect(x).toBe("hi"),
     })
   })
 
   it("args async", async () => {
     expect.assertions(1)
-    await fn2(["hi"], {
+    await fn2.run(["hi"], {
       hi: async (x: string) => expect(x).toBe("hi"),
     })
   })
 
   it("step args", () => {
-    fn2({
+    fn2.run({
       args: ["hi"],
       hi: (x: string) => expect(x).toBe("hi"),
     })
@@ -92,14 +92,14 @@ describe("fn2", () => {
 
   it("step args async", async () => {
     expect.assertions(1)
-    await fn2({
+    await fn2.run({
       args: ["hi"],
       hi: async (x: string) => expect(x).toBe("hi"),
     })
   })
 
   it("both args", () => {
-    fn2([" world"], {
+    fn2.run([" world"], {
       args: ["hi"],
       hi: (x: string, y: string) =>
         expect(x + y).toBe("hi world"),
@@ -108,7 +108,7 @@ describe("fn2", () => {
 
   it("step args async", async () => {
     expect.assertions(1)
-    await fn2([" world"], {
+    await fn2.run([" world"], {
       args: ["hi"],
       hi: async (x: string, y: string) =>
         expect(x + y).toBe("hi world"),
