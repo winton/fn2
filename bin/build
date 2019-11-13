@@ -12,5 +12,4 @@ tsc -b
 ESM="./dist/esm/index.js"
 MJS="./dist/mjs/fn2-$VERSION_BUMP.mjs"
 
-npx rollup $ESM --context this --file $MJS -f esm
-npx terser $MJS --compress -m -o $MJS
+npx rollup $ESM --context this --file $MJS -f esm --sourcemap
