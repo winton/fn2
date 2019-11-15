@@ -54,14 +54,14 @@ export class Fn2 {
       const out = fn(...preArgs, ...args)
 
       if (out && out.then) {
-        promises.push(
-          out.then((o: any) => {
-            memo[fnId] = o
-            if (returnArgs) {
-              args = o
-            }
-          })
-        )
+        const promise = out.then((o: any) => {
+          memo[fnId] = o
+          if (returnArgs) {
+            args = o
+          }
+        })
+        memo[fnId] = promise
+        promises.push(promise)
       } else {
         memo[fnId] = out
         if (returnArgs) {
